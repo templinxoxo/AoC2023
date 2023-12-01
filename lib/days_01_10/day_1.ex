@@ -33,10 +33,25 @@ defmodule Day1 do
   end
 
   def find_digits_from_words(line) do
-    scan = Regex.scan(~r/(\d|one|two|three|four|five|six|seven|eight|nine)/, line)
-    digits = Enum.map(scan, &(&1 |> List.first() |> to_int()))
+    digits = find_line_digits(line)
 
     10 * List.first(digits) + List.last(digits)
+  end
+
+  @regexp ~r/(\d|one|two|three|four|five|six|seven|eight|nine)/
+  def find_line_digits(line) do
+    case Regex.run(@regexp, line) do
+      nil ->
+        []
+
+      [d, _] ->
+        digit = to_int(d)
+
+        [{index, _} | _] = Regex.run(~r/(#{d})/, line, return: :index)
+        new_line = String.slice(line, index + 1, String.length(line))
+
+        [digit] ++ find_line_digits(new_line)
+    end
   end
 
   def to_int("one"), do: 1

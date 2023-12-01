@@ -31,4 +31,10 @@ defmodule Day1Test do
 
     assert result == 281
   end
+
+  test "find_line_digits/1 handles overlapping words" do
+    result = Subject.find_line_digits("oneight")
+
+    assert result == [1, 8]
+  end
 end
