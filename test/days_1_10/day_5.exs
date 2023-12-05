@@ -45,4 +45,15 @@ defmodule Day5Test do
     assert result == 35
   end
 
+  test "execute_part_1/1 - solve with ranges" do
+    result = Subject.execute_part_1_ranges(@test_data)
+
+    assert result == 35
+  end
+
+  test "execute_part_2/1" do
+    result = Subject.execute_part_2(@test_data)
+
+    assert result == 46
+  end
 end
