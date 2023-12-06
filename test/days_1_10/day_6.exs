@@ -13,4 +13,10 @@ defmodule Day6Test do
 
     assert result == 288
   end
+
+  test "execute_part_2/1" do
+    result = Subject.execute_part_2(@test_data)
+
+    assert result == 71503
+  end
 end

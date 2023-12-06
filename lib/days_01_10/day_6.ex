@@ -5,11 +5,15 @@ defmodule Day6 do
     data
     |> parse_input_as_separate_numbers()
     |> Enum.map(&get_possible_winning_scenarios(&1))
-    |> IO.inspect()
     |> Enum.reduce(1, &(&1 * &2))
   end
 
-  # actual logic
+  def execute_part_2(data \\ fetch_data()) do
+    data
+    |> parse_input_as_single_number()
+    |> get_possible_winning_scenarios()
+  end
+
 
   @doc """
   to get number of winning scenarios, we have to write a bunch of function
@@ -53,8 +57,8 @@ defmodule Day6 do
   end
 
   def points_between_roots(roots) do
-    x1 = Enum.min(roots) |> then(& &1 + 1) |> floor()
-    x2 = Enum.max(roots) |> then(& &1 - 1) |> ceil()
+    x1 = Enum.min(roots) |> then(&(&1 + 1)) |> floor()
+    x2 = Enum.max(roots) |> then(&(&1 - 1)) |> ceil()
 
     x2 - x1 + 1
   end
@@ -78,5 +82,25 @@ defmodule Day6 do
     |> Enum.map(&String.to_integer/1)
     |> then(&Enum.split(&1, floor(length(&1) / 2)))
     |> then(fn {list1, list2} -> Enum.zip(list1, list2) end)
+  end
+
+  @doc """
+  Parses the input containing 2 lists of numbers into 2 numbers.
+  Each line represents 1 number, spaces and other characters are removed, ex:
+    "1 2 3
+     3 4 5"
+  will be parsed into
+    {123, 345}
+  """
+  def parse_input_as_single_number(input) do
+    input
+    |> String.split("\n")
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.map(fn line ->
+      line
+      |> String.replace(~r/\D/, "")
+      |> String.to_integer()
+    end)
+    |> then(fn [num1, num2] -> {num1, num2} end)
   end
 end
