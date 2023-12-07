@@ -14,7 +14,6 @@ defmodule Day6 do
     |> get_possible_winning_scenarios()
   end
 
-
   @doc """
   to get number of winning scenarios, we have to write a bunch of function
     distance = speed * time_left
