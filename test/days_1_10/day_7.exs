@@ -42,4 +42,36 @@ defmodule Day7Test do
       assert result == 6440
     end
   end
+
+  describe "execute_part_2/1" do
+    test "order sample cards - 4 of a kind" do
+      cards = """
+      JKKK2 10
+      QQQQ2 1
+      """
+
+      result = Subject.execute_part_2(cards)
+
+      # QQQQ2 will trump JKKK2
+      assert result == 12
+    end
+
+    test "order sample cards - 4 of a kind vs 3 of a kind" do
+      cards = """
+      JQQQ2 10
+      QQQK2 1
+      """
+
+      result = Subject.execute_part_2(cards)
+
+      # JQQQ2 will trump QQQK2
+      assert result == 21
+    end
+
+    test "test input" do
+      result = Subject.execute_part_2(@test_data)
+
+      assert result == 5905
+    end
+  end
 end

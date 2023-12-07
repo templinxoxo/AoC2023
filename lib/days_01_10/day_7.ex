@@ -6,6 +6,20 @@ defmodule Day7 do
     |> parse_input()
     |> grade_plays_strength()
     |> order()
+    |> calculate_winnings()
+  end
+
+  def execute_part_2(data \\ fetch_data()) do
+    data
+    |> replace_jacks_with_jokers()
+    |> parse_input()
+    |> grade_plays_strength()
+    |> order()
+    |> calculate_winnings()
+  end
+
+  def calculate_winnings(plays) do
+    plays
     |> Enum.with_index()
     |> Enum.map(fn {{_cards, bid}, index} -> bid * (index + 1) end)
     |> Enum.sum()
@@ -13,6 +27,10 @@ defmodule Day7 do
 
   def grade_plays_strength(plays) do
     Enum.map(plays, fn {cards, bid} -> {grade_cards_strength(cards), bid} end)
+  end
+
+  def replace_jacks_with_jokers(input) do
+    String.replace(input, "J", "1")
   end
 
   def order(plays) do
@@ -27,13 +45,19 @@ defmodule Day7 do
   and 2nd represents all cards for comparison value
 
   Cards are then sorted by type and original cards order
+
+  If cards contains jokers, those will mimic the strongest card in the hand
   """
   def grade_cards_strength(cards) do
+    jokers_number = cards |> Enum.filter(&(&1 == 1)) |> length()
+
     strength =
       cards
+      |> Enum.reject(&(&1 == 1))
       |> Enum.group_by(& &1)
       |> Enum.map(fn {card, group} -> {Enum.count(group), card} end)
       |> Enum.sort(:desc)
+      |> play_jokers(jokers_number)
       |> get_cards_strength()
 
     {strength, cards}
@@ -53,6 +77,13 @@ defmodule Day7 do
   def get_cards_strength([{2, _} | _]), do: 2
   # High card
   def get_cards_strength([{1, _} | _]), do: 1
+
+  # only jokers in hand
+  def play_jokers([], 5), do: [{5, 1}]
+
+  # add jokers number to highest repetition
+  def play_jokers([{repetitions, card} | rest], jokers),
+    do: [{repetitions + jokers, card}] ++ rest
 
   @doc """
   Serializes a list of card combinations
