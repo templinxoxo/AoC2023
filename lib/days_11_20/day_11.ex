@@ -1,11 +1,18 @@
 defmodule Day11 do
-  # execute methods
-
   def execute_part_1(data \\ fetch_data()) do
     data
     |> parse_input()
     |> find_galaxies()
-    |> expand_universe()
+    |> expand_universe(1)
+    |> calculate_galaxy_distances_sum()
+  end
+
+  def execute_part_2(data \\ fetch_data(), expansion_time \\ 1_000_000) do
+    data
+    |> parse_input()
+    |> find_galaxies()
+    # but why tho?
+    |> expand_universe(expansion_time - 1)
     |> calculate_galaxy_distances_sum()
   end
 
@@ -26,7 +33,7 @@ defmodule Day11 do
     |> Enum.reject(&is_nil/1)
   end
 
-  def expand_universe(galaxy_list) do
+  def expand_universe(galaxy_list, expansion_time \\ 1) do
     empty_x_axis = get_empty_axis(Enum.map(galaxy_list, fn {x, _y} -> x end))
     empty_y_axis = get_empty_axis(Enum.map(galaxy_list, fn {_x, y} -> y end))
 
@@ -35,7 +42,7 @@ defmodule Day11 do
       expansion_x = empty_x_axis |> Enum.filter(&(&1 < x)) |> length()
       expansion_y = empty_y_axis |> Enum.filter(&(&1 < y)) |> length()
 
-      {x + expansion_x, y + expansion_y}
+      {x + (expansion_x * expansion_time), y + expansion_y * expansion_time}
     end)
   end
 

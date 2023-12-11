@@ -21,4 +21,16 @@ defmodule Day11Test do
 
     assert result == 374
   end
+
+  test "execute_part_2/2 - 10 expansions" do
+    result = Subject.execute_part_2(@test_data, 10)
+
+    assert result == 1030
+  end
+
+  test "execute_part_2/2 - 100 expansions" do
+    result = Subject.execute_part_2(@test_data, 100)
+
+    assert result == 8410
+  end
 end
