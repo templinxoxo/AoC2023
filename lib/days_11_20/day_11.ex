@@ -42,7 +42,7 @@ defmodule Day11 do
       expansion_x = empty_x_axis |> Enum.filter(&(&1 < x)) |> length()
       expansion_y = empty_y_axis |> Enum.filter(&(&1 < y)) |> length()
 
-      {x + (expansion_x * expansion_time), y + expansion_y * expansion_time}
+      {x + expansion_x * expansion_time, y + expansion_y * expansion_time}
     end)
   end
 
