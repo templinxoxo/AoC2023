@@ -30,17 +30,25 @@ defmodule Day12Test do
 
       assert result == 4
     end
+
+    test "test input" do
+      result = Subject.execute_part_1(@test_data)
+
+      assert result == 21
+    end
   end
 
-  test "execute_part_1/1" do
-    result = Subject.execute_part_1(@test_data)
+  describe "execute_part_2/1" do
+    test "complex case" do
+      result = Subject.execute_part_2("??.?.#.?.??#????? 1,1,1,7")
 
-    assert result == 21
+      assert result == 1_471_990
+    end
+
+    test "test input" do
+      result = Subject.execute_part_2(@test_data)
+
+      assert result == 525_152
+    end
   end
-
-  # test "execute_part_2/1" do
-  #   result = Subject.execute_part_2(@test_data)
-
-  #   assert result == 0
-  # end
 end
