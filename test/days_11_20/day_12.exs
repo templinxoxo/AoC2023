@@ -12,22 +12,24 @@ defmodule Day12Test do
   ?###???????? 3,2,1
   """
 
-  test "execute_part_1/1 - simplified" do
-    result = Subject.execute_part_1("?###???????? 3,2,1")
+  describe "execute_part_1/1" do
+    test "simple input 1" do
+      result = Subject.execute_part_1("?###???????? 3,2,1")
 
-    assert result == 10
-  end
+      assert result == 10
+    end
 
-  # test "execute_part_1/1 - simplified 2" do
-  #   result = Subject.execute_part_1("???????????# 3,2,1")
+    test "simple input 2" do
+      result = Subject.execute_part_1("????? 1,1")
 
-  #   assert result == 10
-  # end
+      assert result == 6
+    end
 
-  test "execute_part_1/1 - simplified 2" do
-    result = Subject.execute_part_1("????? 1,1")
+    test "simple input 3" do
+      result = Subject.execute_part_1("?.??#?.????#?????? 4,4")
 
-    assert result == 6
+      assert result == 4
+    end
   end
 
   test "execute_part_1/1" do

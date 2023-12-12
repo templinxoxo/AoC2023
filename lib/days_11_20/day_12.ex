@@ -5,8 +5,6 @@ defmodule Day12 do
     data
     |> parse_input()
     |> Enum.flat_map(&get_unknown_elements_permutations/1)
-    # print
-    # |> Enum.map(&(&1 |> Enum.join("") |> IO.inspect()))
     |> length()
   end
 
@@ -50,20 +48,14 @@ defmodule Day12 do
           _ -> false
         end
 
-      prev_operational_element_fits? =
-        case current_index do
-          0 ->
-            true
-
-          _ ->
-            elements
-            |> Enum.at(current_index - 1)
-            |> then(&(&1 in [".", "?"]))
-        end
+      prev_elements_fit? =
+        elements
+        |> Enum.take(current_index)
+        |> Enum.all?(&(&1 in [".", "?"]))
 
       # if elements fit, take remaining elements and recursively call this method
       if all_broken_elements_fit? and next_operational_element_fits? and
-           prev_operational_element_fits? do
+           prev_elements_fit? do
         # remaining elements to be solved with tail groups
         remaining_elements =
           elements
