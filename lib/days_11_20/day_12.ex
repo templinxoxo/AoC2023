@@ -95,7 +95,6 @@ defmodule Day12 do
     |> Enum.sum()
   end
 
-
   def group_can_be_placed_at_index?(elements, current_index, current_group_size) do
     # group can be placed at current index if:
     # - all elements between index and end of group are either damaged or unknown (#, ?)
@@ -114,7 +113,7 @@ defmodule Day12 do
 
   def next_operational_element_fits?(elements, current_index, current_group_size) do
     next_elem = Enum.at(elements, current_index + current_group_size)
-    is_nil(next_elem) or next_elem in [ ".", "?"]
+    is_nil(next_elem) or next_elem in [".", "?"]
   end
 
   def prev_elements_fit?(elements, current_index) do
@@ -122,7 +121,6 @@ defmodule Day12 do
     |> Enum.take(current_index)
     |> Enum.all?(&(&1 in [".", "?"]))
   end
-
 
   # actual logic
 
