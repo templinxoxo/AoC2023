@@ -56,21 +56,9 @@ defmodule Day13Test do
     end
   end
 
-  # test "execute_part1/1 real input" do
-  #   result = Subject.execute_part_1("..#####
-  #   ..#....
-  #   ..#####
-  #   ##...#.
-  #   .#.....
-  #   .####.#
-  #   .####.#
-  #   ##.....
-  #   ##...#.
-  #   ..#####
-  #   ..#....
-  #   ..#####
-  #   ..#####")
+  test "execute_par2_2/1" do
+    result = Subject.execute_part_2(@test_data)
 
-  #   assert result == 5
-  # end
+    assert result == 400
+  end
 end
