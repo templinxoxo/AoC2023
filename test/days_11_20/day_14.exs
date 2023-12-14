@@ -22,9 +22,17 @@ defmodule Day14Test do
     assert result == 136
   end
 
-  # test "execute_part_2/1" do
-  #   result = Subject.execute_part_2(@test_data)
+  describe "execute_part_2/1" do
+    test "3 cycles" do
+      result = Subject.execute_part_2_test(@test_data, 3)
 
-  #   assert result == 0
-  # end
+      # assert result == 0
+    end
+
+    # test "1000000000 cycles" do
+    #   result = Subject.execute_part_2(@test_data, 1_000_000_000)
+
+    #   assert result == 0
+    # end
+  end
 end
