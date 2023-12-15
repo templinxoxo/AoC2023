@@ -23,16 +23,12 @@ defmodule Day14Test do
   end
 
   describe "execute_part_2/1" do
-    test "3 cycles" do
-      result = Subject.execute_part_2_test(@test_data, 3)
+    test "1000000000 cycles" do
+      result =
+        Subject.execute_part_2(@test_data, 1_000_000_000)
+        |> IO.inspect()
 
-      # assert result == 0
+      assert result == 64
     end
-
-    # test "1000000000 cycles" do
-    #   result = Subject.execute_part_2(@test_data, 1_000_000_000)
-
-    #   assert result == 0
-    # end
   end
 end

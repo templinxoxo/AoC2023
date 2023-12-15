@@ -4,28 +4,61 @@ defmodule Day14 do
   def execute_part_1(data \\ fetch_data()) do
     data
     |> parse_input()
-    |> transpose()
     |> move_up()
     |> weigh()
-    |> Enum.sum()
   end
 
-  # def execute_part_2(data, cycles) do
-  #   data
-  #   |> execute_part_2_test(cycles)
-  # end
-
-  def execute_part_2_test(data \\ fetch_data(), cycles) do
+  def execute_part_2(data \\ fetch_data(), cycles) do
     data
     |> parse_input()
-    |> transpose()
-    |> then(fn rows ->
-      1..cycles
-      |> Enum.reduce(rows, fn _, rows ->
-        run_rotation_cycle(rows)
-        |> print()
-      end)
+    |> find_rotation_cycle(cycles)
+    |> then(fn {cycle_start, cycle_length, results_per_cycle} ->
+      remaining_cycles = rem(cycles - cycle_start - 1, cycle_length)
+
+      results_per_cycle |> Map.get(cycle_start + remaining_cycles) |> weigh()
     end)
+  end
+
+  @doc """
+  find repeating cycle in the rotation of the rows.
+  After X cycles, solution will start to repeat itself, with a constant cycle
+
+  To count a result after any number of cycles, we just need to calculate which part of the cycle will be repeated on the given number of cycles.
+
+  returns:
+  {cycle_start, cycle_length, results_per_cycle}
+  """
+  def find_rotation_cycle(rows, max_cycles) do
+    find_rotation_cycle(rows, max_cycles, 0, %{})
+  end
+
+  def find_rotation_cycle(rows, max_cycles, current_cycle, _solutions)
+      when current_cycle > max_cycles do
+    {current_cycle, nil, rows}
+  end
+
+  def find_rotation_cycle(rows, max_cycles, current_cycle, solutions) do
+    solution_key = rows |> List.flatten() |> Enum.join("")
+
+    case Map.get(solutions, solution_key) do
+      nil ->
+        rows = run_rotation_cycle(rows)
+
+        find_rotation_cycle(
+          rows,
+          max_cycles,
+          current_cycle + 1,
+          solutions |> Map.put(solution_key, {current_cycle, rows})
+        )
+
+      {cycle, _result} ->
+        results_per_cycle =
+          solutions
+          |> Enum.map(fn {_, {cycle_number, rows}} -> {cycle_number, rows} end)
+          |> Map.new()
+
+        {cycle, current_cycle - cycle, results_per_cycle}
+    end
   end
 
   def run_rotation_cycle(rows) do
@@ -64,6 +97,7 @@ defmodule Day14 do
       end)
       |> Enum.sum()
     end)
+    |> Enum.sum()
   end
 
   # helpers
@@ -83,20 +117,20 @@ defmodule Day14 do
     |> transpose()
   end
 
+  # for easier test input debugging
+  # def print(rows) do
+  #   IO.puts("inspecting:")
 
-  def print(rows) do
-    IO.puts("inspecting:")
+  #   rows
+  #   |> transpose()
+  #   |> Enum.each(fn row ->
+  #     row |> Enum.join("") |> IO.puts()
+  #   end)
 
-    rows
-    |> transpose()
-    |> Enum.each(fn row ->
-      row |> Enum.join("") |> IO.puts()
-    end)
+  #   IO.puts("")
 
-    IO.puts("")
-
-    rows
-  end
+  #   rows
+  # end
 
   def fetch_data() do
     Api.get_input(14)
@@ -106,5 +140,6 @@ defmodule Day14 do
     input
     |> String.split("\n", trim: true)
     |> Enum.map(&String.split(&1, "", trim: true))
+    |> transpose()
   end
 end
