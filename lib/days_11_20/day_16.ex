@@ -1,72 +1,44 @@
 defmodule Day16 do
   # execute methods
 
-  def execute_part_1(data) do
+  def execute_part_1(data \\ fetch_data()) do
     data
     |> parse_input()
-    |> follow_light_paths()
+    |> get_visited_elements()
     |> calculate_covered_area()
   end
 
-  def follow_light_paths(paths \\ [[{0, 0, ">"}]], map) do
-    paths
-    |> Enum.flat_map(&go_to_next_step(&1, map))
-    |> mark_finished_paths(map)
-    |> then(fn paths ->
-      all_paths_finished? =
-        Enum.all?(paths, fn path ->
-          path
-          |> List.last()
-          |> elem(2)
-          |> then(&(&1 in [:end, :loop]))
-        end)
-
-      if all_paths_finished? do
-        print(paths, map)
-        paths
-      else
-        follow_light_paths(paths, map)
-      end
-    end)
+  def get_visited_elements(map) do
+    get_visited_elements([{0, 0, ">"}], [], map)
   end
 
-  def go_to_next_step(path, map) do
-    path
-    |> List.last()
-    |> case do
-      {_, _, :end} ->
-        [path]
+  def get_visited_elements([], visited, map) do
+    print(visited, map)
 
-      {_, _, :loop} ->
-        [path]
-
-      elem ->
-        elem
-        |> get_next_steps(map)
-        |> Enum.map(&(path ++ [&1]))
-    end
+    visited
   end
 
-  def mark_finished_paths(paths, map) do
-    paths
-    |> Enum.map(fn path ->
-      last_elem = List.last(path)
-      {x, y, direction} = last_elem
+  def get_visited_elements(current_positions, visited, map) do
+    current_positions
+    |> Enum.flat_map(&get_next_steps(&1, map))
+    |> remove_finished_paths(visited, map)
+    |> get_visited_elements(visited ++ current_positions, map)
+  end
 
+  def remove_finished_paths(positions, visited, map) do
+    positions
+    |> Enum.filter(fn {x, y, _direction} = position ->
       cond do
-        direction in [:end, :loop] ->
-          path
-
-        List.flatten(paths) |> Enum.filter(&(&1 == last_elem)) |> length() > 1 ->
-          # mark paths that loop into already visited paths
-          path ++ [{x, y, :loop}]
+        position in visited ->
+          # remove positions that loop into already visited paths
+          false
 
         y >= length(map) or y < 0 or x >= length(List.first(map)) or x < 0 ->
-          # mark paths that go out of bounds
-          path |> Enum.take(length(path) - 1) |> Enum.concat([{x, y, :end}])
+          # remove positions that go out of bounds
+          false
 
         true ->
-          path
+          true
       end
     end)
   end
@@ -101,31 +73,28 @@ defmodule Day16 do
     end
   end
 
-  def calculate_covered_area(paths) do
-    paths
-    |> List.flatten()
-    |> Enum.reject(&(elem(&1, 2) in [:end, :loop]))
+  def calculate_covered_area(visited) do
+    visited
     |> Enum.map(fn {x, y, _} -> {x, y} end)
     |> Enum.uniq()
-    |> length
+    |> length()
   end
 
   def parse_input(input) do
     input
     |> String.split("\n", trim: true)
     |> Enum.map(&String.split(&1, "", trim: true))
+    |> then(fn data ->
+      print([], data)
+      data
+    end)
   end
 
-  def print(paths, map) do
-    visited =
-      paths
-      |> List.flatten()
-      |> Enum.uniq()
-      |> Enum.reject(&(elem(&1, 2) in [:end, :loop]))
-      |> Enum.group_by(fn {x, y, _} -> {x, y} end)
+  def print(visited, map) do
+    visited_map =
+      visited
       |> Enum.map(fn
-        {coords, [{_, _, direction}]} -> {coords, direction}
-        {coords, results} -> {coords, length(results)}
+        {x, y, direction} -> {{x, y}, direction}
       end)
       |> Map.new()
 
@@ -135,11 +104,18 @@ defmodule Day16 do
       row
       |> Enum.with_index()
       |> Enum.map(fn
-        {".", x} -> Map.get(visited, {x, y}, ".")
+        {".", x} -> Map.get(visited_map, {x, y}, ".")
         {elem, _x} -> elem
       end)
       |> Enum.join()
       |> IO.puts()
     end)
+  end
+
+  def fetch_data do
+    # this time data has to be imported from separate file
+    # "/" in string are removed by default and needs to be manually replaced with "//"
+    # for the data to work
+    Day16.Input.data()
   end
 end
