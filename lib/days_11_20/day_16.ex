@@ -2,18 +2,20 @@ defmodule Day16 do
   # execute methods
 
   def execute_part_1(data \\ fetch_data()) do
-    data
-    |> parse_input()
-    |> get_visited_elements()
-    |> calculate_covered_area()
+    Timer.time(fn ->
+      data
+      |> parse_input()
+      |> get_visited_elements()
+      |> calculate_covered_area()
+    end)
   end
 
   def get_visited_elements(map) do
     get_visited_elements([{0, 0, ">"}], [], map)
   end
 
-  def get_visited_elements([], visited, map) do
-    print(visited, map)
+  def get_visited_elements([], visited, _map) do
+    # print(visited, map)
 
     visited
   end
@@ -84,10 +86,10 @@ defmodule Day16 do
     input
     |> String.split("\n", trim: true)
     |> Enum.map(&String.split(&1, "", trim: true))
-    |> then(fn data ->
-      print([], data)
-      data
-    end)
+    # |> then(fn data ->
+    #   print([], data)
+    #   data
+    # end)
   end
 
   def print(visited, map) do
