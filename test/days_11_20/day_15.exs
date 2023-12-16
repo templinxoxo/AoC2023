@@ -11,9 +11,9 @@ defmodule Day15Test do
     assert result == 1320
   end
 
-  # test "execute_part_2/1" do
-  #   result = Subject.execute_part_2(@test_data)
+  test "execute_part_2/1" do
+    result = Subject.execute_part_2(@test_data)
 
-  #   assert result == 0
-  # end
+    assert result == 145
+  end
 end
