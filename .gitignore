@@ -27,3 +27,6 @@ aoc-*.tar
 /bin/
 /lib/day_.ex
 /test/day_.exs
+
+# ignore input data files if any
+*_input.ex
