@@ -52,9 +52,9 @@ defmodule Day16Test do
     end
   end
 
-  # test "execute_part_2/1" do
-  #   result = Subject.execute_part_2(@test_data)
+  test "execute_part_2/1" do
+    result = Subject.brute_force_part_2(@test_data)
 
-  #   assert result == 0
-  # end
+    assert result == 51
+  end
 end

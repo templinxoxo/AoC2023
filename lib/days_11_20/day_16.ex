@@ -2,12 +2,51 @@ defmodule Day16 do
   # execute methods
 
   def execute_part_1(data \\ fetch_data()) do
-    Timer.time(fn ->
+    Timer.time("pt1", fn ->
       data
       |> parse_input()
       |> get_visited_elements()
       |> calculate_covered_area()
     end)
+  end
+
+  def brute_force_part_2(data \\ fetch_data()) do
+    Timer.time("pt2", fn ->
+      data
+      |> parse_input()
+      |> then(fn map ->
+        map
+        |> get_starting_positions()
+        |> Enum.map(fn {x, y, direction} = starting_position ->
+          label = "{#{x}, #{y}} #{direction}"
+
+          Timer.time(label, fn ->
+            get_visited_elements([starting_position], [], map)
+            |> calculate_covered_area()
+          end)
+        end)
+        |> Enum.max()
+      end)
+    end)
+  end
+
+  def get_starting_positions(map) do
+    x_max = (map |> List.first() |> length()) - 1
+    y_max = (map |> length()) - 1
+
+    vertical =
+      0..x_max
+      |> Enum.flat_map(fn x ->
+        [{x, 0, "v"}, {y_max, x, "^"}]
+      end)
+
+    horizontal =
+      0..y_max
+      |> Enum.flat_map(fn y ->
+        [{0, y, ">"}, {x_max, y, "<"}]
+      end)
+
+    vertical ++ horizontal
   end
 
   def get_visited_elements(map) do
@@ -86,6 +125,7 @@ defmodule Day16 do
     input
     |> String.split("\n", trim: true)
     |> Enum.map(&String.split(&1, "", trim: true))
+
     # |> then(fn data ->
     #   print([], data)
     #   data
