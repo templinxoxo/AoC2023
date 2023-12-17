@@ -35,4 +35,24 @@ defmodule Day17Test do
 
     assert result == 7
   end
+
+  test "execute_part_2/1" do
+    result = Subject.execute_part_2(@test_data)
+
+    assert result == 94
+  end
+
+  test "execute_part_2/1 - tricky path" do
+    result =
+      """
+      111111111111
+      999999999991
+      999999999991
+      999999999991
+      999999999991
+      """
+      |> Subject.execute_part_1()
+
+    assert result == 71
+  end
 end

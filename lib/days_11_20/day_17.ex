@@ -11,6 +11,16 @@ defmodule Day17 do
     end)
   end
 
+  def execute_part_2(data \\ fetch_data()) do
+    delta_range = 4..10
+
+    Timer.time(fn ->
+      data
+      |> parse_input()
+      |> dijkstra(@start_positions, delta_range)
+    end)
+  end
+
   def dijkstra(_nodes_map, [{_x, _y, _direction, value, :end} | _remaining_nodes], _delta_range) do
     value
   end
