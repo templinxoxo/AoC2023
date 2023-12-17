@@ -1,23 +1,27 @@
 defmodule Day17 do
   def execute_part_1(data \\ fetch_data()) do
+    delta_range = 1..3
+
     Timer.time(fn ->
       data
       |> parse_input()
-      |> dijkstra([{0, 0, ">", 0,  :unvisited}, {0, 0, "v", 0,  :unvisited}])
+      |> dijkstra([{0, 0, ">", 0,  :unvisited}, {0, 0, "v", 0,  :unvisited}], delta_range)
       |> elem(1)
     end)
   end
 
-  def dijkstra(nodes_map, [{_x, _y, _direction, value, :end} | _remaining_nodes]) do
+  def dijkstra(nodes_map, [{_x, _y, _direction, value, :end} | _remaining_nodes], _delta_range) do
     {nodes_map, value}
   end
 
-  def dijkstra(nodes_map, [{x, y, direction, _value, _status} | remaining_nodes]) do
+  def dijkstra(nodes_map, [{x, y, direction, _value, _status} | remaining_nodes], delta_range) do
     {current_step_value, prev_node, current_path_length, _status} = Map.get(nodes_map, {x, y, direction})
 
-    [{x - 1, y, "<"}, {x, y - 1, "^"}, {x + 1, y,  ">"}, {x, y + 1, "v"},
-     {x - 2, y, "<"}, {x, y - 2, "^"}, {x + 2, y,  ">"}, {x, y + 2, "v"},
-     {x - 3, y, "<"}, {x, y - 3, "^"}, {x + 3, y,  ">"}, {x, y + 3, "v"}]
+
+    delta_range
+    |> Enum.flat_map(fn delta ->
+      [{x - delta, y, "<"}, {x, y - delta, "^"}, {x + delta, y,  ">"}, {x, y + delta, "v"}]
+    end)
     # get all possible directions excluding going back
     |> Enum.reject(fn {_x, _y, dir} -> direction in [dir, opposite(dir)] end)
     |> Enum.map(fn {x1, y1, dir} = coordinates ->
@@ -58,13 +62,6 @@ defmodule Day17 do
       {coordinates,
        {v, {x, y, direction}, current_path_length + value, status}}
     end)
-    # reject paths going more than 4 in the same direction
-    # |> Enum.reject(fn {{_, _, next_direction}, {_, history, _path_length, _status}} ->
-    #   history = Enum.take(history, 4)
-    #   all_in_line? = Enum.all?(history, fn {_x, _y, dir} -> dir == next_direction end)
-
-    #   length(history) == 4 and all_in_line?
-    # end)
     |> then(fn next_steps ->
       # get new steps for next iteration
       new_nodes =
@@ -85,7 +82,7 @@ defmodule Day17 do
       # merge new entrees into nodes_map
       nodes_map
       |> Map.merge(new_entrees)
-      |> dijkstra(new_nodes)
+      |> dijkstra(new_nodes, delta_range)
     end)
   end
 
@@ -93,13 +90,6 @@ defmodule Day17 do
   def opposite(">"), do: "<"
   def opposite("^"), do: "v"
   def opposite("v"), do: "^"
-
-  def execute_part_2(data \\ fetch_data()) do
-    data
-    |> parse_input()
-
-    0
-  end
 
   # helpers
   def fetch_data() do
@@ -140,29 +130,5 @@ defmodule Day17 do
     end)
     |> Map.new()
 
-  end
-
-  def print_path({nodes_map, len}) do
-    {{x, y}, {_, history, _, _}} =
-      nodes_map
-      |> Enum.find(fn {_, {_, _, _, _, status}} -> status == :end end)
-
-    history = Enum.map(history, fn {x, y, _} -> {x, y} end)
-
-    0..y
-    |> Enum.map(fn y ->
-      0..x
-      |> Enum.map(fn x ->
-        if {x, y} in history do
-          "#"
-        else
-          "."
-        end
-      end)
-      |> Enum.join()
-      |> IO.puts()
-    end)
-
-    {nodes_map, len}
   end
 end
