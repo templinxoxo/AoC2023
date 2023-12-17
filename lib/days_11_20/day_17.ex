@@ -1,26 +1,27 @@
 defmodule Day17 do
+  @start_positions [{0, 0, ">", 0, :unvisited}, {0, 0, "v", 0, :unvisited}]
+
   def execute_part_1(data \\ fetch_data()) do
     delta_range = 1..3
 
     Timer.time(fn ->
       data
       |> parse_input()
-      |> dijkstra([{0, 0, ">", 0,  :unvisited}, {0, 0, "v", 0,  :unvisited}], delta_range)
-      |> elem(1)
+      |> dijkstra(@start_positions, delta_range)
     end)
   end
 
-  def dijkstra(nodes_map, [{_x, _y, _direction, value, :end} | _remaining_nodes], _delta_range) do
-    {nodes_map, value}
+  def dijkstra(_nodes_map, [{_x, _y, _direction, value, :end} | _remaining_nodes], _delta_range) do
+    value
   end
 
   def dijkstra(nodes_map, [{x, y, direction, _value, _status} | remaining_nodes], delta_range) do
-    {current_step_value, prev_node, current_path_length, _status} = Map.get(nodes_map, {x, y, direction})
-
+    {current_step_value, prev_node, current_path_length, _status} =
+      Map.get(nodes_map, {x, y, direction})
 
     delta_range
     |> Enum.flat_map(fn delta ->
-      [{x - delta, y, "<"}, {x, y - delta, "^"}, {x + delta, y,  ">"}, {x, y + delta, "v"}]
+      [{x - delta, y, "<"}, {x, y - delta, "^"}, {x + delta, y, ">"}, {x, y + delta, "v"}]
     end)
     # get all possible directions excluding going back
     |> Enum.reject(fn {_x, _y, dir} -> direction in [dir, opposite(dir)] end)
@@ -38,9 +39,11 @@ defmodule Day17 do
         if Enum.any?(nodes, &is_nil(&1)) do
           nil
         else
-          value = Enum.reduce(nodes, 0, fn {value, _prev_node, _path_length, _status}, acc ->
-            value + acc
-          end)
+          value =
+            Enum.reduce(nodes, 0, fn {value, _prev_node, _path_length, _status}, acc ->
+              value + acc
+            end)
+
           {v, prev_node, path_length, status} = List.last(nodes)
           {value, v, prev_node, path_length, status}
         end
@@ -59,8 +62,7 @@ defmodule Day17 do
     end)
     |> Enum.map(fn {coordinates, {value, v, _prev_node, _, status}} ->
       # replace prev element and path length on new nodes
-      {coordinates,
-       {v, {x, y, direction}, current_path_length + value, status}}
+      {coordinates, {v, {x, y, direction}, current_path_length + value, status}}
     end)
     |> then(fn next_steps ->
       # get new steps for next iteration
@@ -77,7 +79,10 @@ defmodule Day17 do
       new_entrees =
         next_steps
         |> Map.new()
-        |> Map.put({x, y, direction}, {current_step_value, prev_node, current_path_length, :visited})
+        |> Map.put(
+          {x, y, direction},
+          {current_step_value, prev_node, current_path_length, :visited}
+        )
 
       # merge new entrees into nodes_map
       nodes_map
@@ -117,7 +122,6 @@ defmodule Day17 do
       entrees
       |> List.replace_at(-1, {coordinates, {last_value, nil, nil, :end}})
       |> List.replace_at(0, {{0, 0}, {first_value, [], 0, :unvisited}})
-
     end)
     |> then(fn entrees ->
       # for each point, make it actually 4 separate points with different points of entry possible
@@ -129,6 +133,5 @@ defmodule Day17 do
       end)
     end)
     |> Map.new()
-
   end
 end
