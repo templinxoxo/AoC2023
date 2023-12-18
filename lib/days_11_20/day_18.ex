@@ -11,29 +11,81 @@ defmodule Day18 do
   def count_inside_points(borders) do
     # go through all rows (y coordinates)
     borders
-    |> Enum.filter(fn {align, _, _, _} -> align == :horizontal end)
-    |> Enum.map(fn {_, _, _, y} -> y end)
-    |> Enum.min_max()
-    |> then(fn {y_min, y_max} -> y_min..y_max end)
+    |> get_map_row_ranges()
     # and count points between vertical borders
-    |> Enum.map(fn y ->
-      borders
-      |> get_points_between_vertical_borders(y)
-      |> Enum.concat(get_points_on_horizontal_borders(borders, y))
-      |> Enum.uniq()
-      |> length()
+    |> Enum.map(fn {row, repetitions} ->
+      get_point_ranges_between_vertical_borders(borders, row)
+      |> Enum.concat(get_point_ranges_on_horizontal_borders(borders, row))
+      |> concat_ranges()
+      |> Enum.map(&Range.size/1)
+      |> Enum.sum()
+      |> then(fn points -> points * repetitions end)
     end)
     |> Enum.sum()
   end
 
-  def get_points_on_horizontal_borders(borders, row) do
+  def get_map_row_ranges(borders) do
+    borders
+    # from all horizontal borders
+    |> Enum.filter(fn {align, _, _, _} -> align == :horizontal end)
+    # get uniq row indexes
+    |> Enum.map(fn {_, _, _, y} -> y end)
+    |> Enum.uniq()
+    |> then(fn rows ->
+      # then based on row indexes, create ranges of rows in between them
+      max_range = rows |> Enum.min_max() |> then(&elem(&1, 0)..elem(&1, 1))
+
+      Enum.reduce(rows, [max_range], fn row, ranges ->
+        Enum.map(ranges, fn
+          # if row is 1-element range, remove it
+          a..a when a == row -> nil
+          # if row is start or end of a range, shorten it
+          a..b when a == row -> (a+1)..b
+          a..b when b == row -> a..(b-1)
+          # if row inside range, - split it into 2 ranges
+          a..b when a < row and row < b -> [a..(row-1), (row+1)..b]
+          # else - keep range as is
+          range -> range
+        end)
+        |> Enum.reject(&is_nil(&1))
+        |> List.flatten()
+      end)
+      # concat with borders
+      |> Enum.concat(rows)
+      # return as row for calculation and multiplier for range
+      |> Enum.map(fn
+        row.._ = range -> {row, Range.size(range)}
+        row -> {row, 1}
+       end)
+    end)
+
+  end
+
+  def concat_ranges(ranges) do
+    ranges
+    |> Enum.sort_by(& &1.first, :desc)
+    |> Enum.reduce([], fn
+      range, [] ->
+        [range]
+
+      range1, [range2 | rest] ->
+        if Range.disjoint?(range1, range2) do
+          [range1, range2 | rest]
+        else
+          # if ranges are conjoint, concat both into 1 range
+          [min(range1.first, range2.first)..max(range1.last, range2.last) | rest]
+        end
+    end)
+  end
+
+  def get_point_ranges_on_horizontal_borders(borders, row) do
     borders
     # get vertical borders in current row
     |> Enum.filter(fn {align, _, _, y} -> align == :horizontal and y == row end)
-    |> Enum.flat_map(fn {_, _, col_range, _} -> Enum.map(col_range, & &1) end)
+    |> Enum.map(fn {_, _, col_range, _} -> col_range end)
   end
 
-  def get_points_between_vertical_borders(borders, row) do
+  def get_point_ranges_between_vertical_borders(borders, row) do
     borders
     # get vertical borders in current row
     |> Enum.filter(fn {align, _, _, row_range} -> align == :vertical and row in row_range end)
@@ -52,15 +104,14 @@ defmodule Day18 do
     # this algorithm will group [0, 2] and [6, 8] together and count area between based on further edges of both
     |> Enum.chunk_every(2, 2)
     # get all points of all in between borders
-    |> Enum.flat_map(fn [starting_border_group, ending_border_group] ->
+    |> Enum.map(fn [starting_border_group, ending_border_group] ->
       starting_border_group
       |> Enum.concat(ending_border_group)
       |> Enum.map(fn {_, _, x, _} -> x end)
       |> Enum.min_max()
       |> then(fn {starting_border, ending_border} ->
-        ending_border..starting_border
+        starting_border..ending_border
       end)
-      |> Enum.map(& &1)
     end)
   end
 

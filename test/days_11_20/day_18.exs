@@ -105,4 +105,27 @@ defmodule Day18Test do
 
     assert result == 26
   end
+
+  test "execute_part_2/1" do
+    result =
+       """
+      R 461937 ()
+      D 56407 ()
+      R 356671 ()
+      D 863240 ()
+      R 367720 ()
+      D 266681 ()
+      L 577262 ()
+      U 829975 ()
+      L 112010 ()
+      D 829975 ()
+      L 491645 ()
+      U 686074 ()
+      L 5411 ()
+      U 500254 ()
+      """
+      |> Subject.execute_part_1()
+
+    assert result == 952_408_144_115
+  end
 end
