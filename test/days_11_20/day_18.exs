@@ -106,9 +106,9 @@ defmodule Day18Test do
     assert result == 26
   end
 
-  test "execute_part_2/1" do
+  test "execute_part_2/1 - decoded" do
     result =
-       """
+      """
       R 461937 ()
       D 56407 ()
       R 356671 ()
@@ -125,6 +125,12 @@ defmodule Day18Test do
       U 500254 ()
       """
       |> Subject.execute_part_1()
+
+    assert result == 952_408_144_115
+  end
+
+  test "execute_part_2/1" do
+    result = Subject.execute_part_2(@test_data)
 
     assert result == 952_408_144_115
   end
