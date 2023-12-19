@@ -7,7 +7,7 @@ defmodule Day19 do
 
   def run_system({workflows, items}) do
     items
-    |> Enum.map(&(run_workflows(&1, workflows, "in")))
+    |> Enum.map(&run_workflows(&1, workflows, "in"))
     |> Enum.map(&grade_item/1)
     |> Enum.sum()
   end
@@ -26,11 +26,25 @@ defmodule Day19 do
   end
 
   def find_destination([rule | remaining_rules], item) do
-    case rule.(item) do
+    rule_fun = eval_rule(rule)
+
+    case rule_fun.(item) do
       nil -> find_destination(remaining_rules, item)
       destination -> destination
     end
   end
+
+  # eval rules into functions
+  def eval_rule([item]), do: fn _item -> item end
+
+  def eval_rule([property, value, destination, sign]),
+    do: fn item ->
+      case Map.get(item, property) do
+        item_value when sign == ">" and item_value > value -> destination
+        item_value when sign == "<" and item_value < value -> destination
+        _ -> nil
+      end
+    end
 
   def grade_item({:accept, item}), do: item |> Map.values() |> Enum.sum()
   def grade_item({:reject, _}), do: 0
@@ -52,30 +66,19 @@ defmodule Day19 do
 
   def parse_workflow(raw_workflow) do
     [name, workflow] = String.split(raw_workflow, ["{", "}"], trim: true)
-    rules = workflow |> String.split(",", trim: true) |> Enum.map(&eval_rule/1)
+    rules = workflow |> String.split(",", trim: true) |> Enum.map(&parse_rule/1)
     {name, rules}
   end
 
-  # eval rules into functions
-  def eval_rule("R"), do: fn _item -> "R" end
-  def eval_rule("A"), do: fn _item -> "A" end
-
-  def eval_rule(rule) do
+  def parse_rule(rule) do
     case String.split(rule, [">", "<", ":"], trim: true) do
       [destination] ->
-        fn _item -> destination end
+        [destination]
 
       [property, value, destination] ->
         sign = String.at(rule, 1)
         value = String.to_integer(value)
-
-        fn item ->
-          case Map.get(item, property) do
-            item_value when sign == ">" and item_value > value -> destination
-            item_value when sign == "<" and item_value < value -> destination
-            _ -> nil
-          end
-        end
+        [property, value, destination, sign]
     end
   end
 
