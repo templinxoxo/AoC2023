@@ -28,4 +28,10 @@ defmodule Day19Test do
 
     assert result == 19114
   end
+
+  test "execute_part_2/1" do
+    result = Subject.Part2.execute(@test_data)
+
+    assert result == 167_409_079_868_000
+  end
 end
