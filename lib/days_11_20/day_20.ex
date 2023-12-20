@@ -1,15 +1,21 @@
 defmodule Day20 do
   def execute_part_1(data \\ fetch_data()) do
-    Timer.time(fn ->
-      data
-      |> parse_input()
-      |> find_cycles(1000)
-      |> repeat_button_pushes(1000)
-    end)
+    data
+    |> parse_input()
+    |> find_cycles(1000)
+    |> repeat_button_pushes(1000)
+  end
+
+  def execute_part_2(data \\ fetch_data()) do
+    data
+    |> parse_input()
+    |> find_cycles(30_000)
+
+    :ok
   end
 
   def find_cycles(init_modules, max_cycles) do
-    {modules, pulse_counter} = process_pulses(init_modules, [{"button", "broadcaster", :low}])
+    {modules, pulse_counter} = process_pulses(init_modules, [{"button", "broadcaster", :low}], 0)
 
     find_cycles(modules, [pulse_counter], init_modules, max_cycles)
   end
@@ -25,7 +31,7 @@ defmodule Day20 do
   end
 
   def find_cycles(modules, pulse_counter_states, init_modules, max_cycles) do
-    {modules, pulse_counter} = process_pulses(modules, [{"button", "broadcaster", :low}])
+    {modules, pulse_counter} = process_pulses(modules, [{"button", "broadcaster", :low}], length(pulse_counter_states))
     find_cycles(modules, pulse_counter_states ++ [pulse_counter], init_modules, max_cycles)
   end
 
@@ -50,13 +56,14 @@ defmodule Day20 do
     {cycles * low, cycles * high}
   end
 
-  def process_pulses(modules, pulses, pulse_counter \\ %{})
-  def process_pulses(modules, [], pulse_counter), do: {modules, pulse_counter}
+  def process_pulses(modules, pulses, pulse_counter \\ %{}, button_press_counter)
+  def process_pulses(modules, [], pulse_counter, _button_press_counter), do: {modules, pulse_counter}
 
   def process_pulses(
         modules,
         [{parent_module_name, module_name, pulse} | remaining_pulses],
-        pulse_counter
+        pulse_counter,
+        button_press_counter
       ) do
     pulse_counter = Map.update(pulse_counter, pulse, 1, &(&1 + 1))
 
@@ -66,6 +73,7 @@ defmodule Day20 do
 
       module ->
         {module, new_pulse} = process_pulse(module, parent_module_name, pulse)
+        do_some_magic(module_name, new_pulse, button_press_counter)
         new_pulses = case new_pulse do
           nil -> []
           _ -> module |> get_destinations() |> Enum.map(&{module_name, &1, new_pulse})
@@ -73,7 +81,7 @@ defmodule Day20 do
 
         modules = Map.put(modules, module_name, module)
 
-        process_pulses(modules, remaining_pulses ++ new_pulses, pulse_counter)
+        process_pulses(modules, remaining_pulses ++ new_pulses, pulse_counter, button_press_counter)
     end
   end
 
@@ -149,4 +157,14 @@ defmodule Day20 do
   end
 
   def map_inputs_for_conjunctions(module, _modules), do: module
+
+  # do some magic instead of implementing a proper solution for part 2
+  # the 'rx' output is based on previous & and its input of 4 previous pulses
+  # if rx expects a low pulse, prev & module will have to receive 4 high pulses from it's inputs
+  # to solve this, simply get cycles from all 4 previous modules ->
+  #   in this case, print whenever those return high and manually search for cycle
+  #   then with those cycles -> LCM will be the final result
+  # I also don't see the point of implementing it since I already did that in day8
+  def do_some_magic(module, :high, cycle) when module in ["gc", "sz", "cm", "xf"], do: IO.puts("#{module}: #{cycle}")
+  def do_some_magic(_, _, _), do: nil
 end
