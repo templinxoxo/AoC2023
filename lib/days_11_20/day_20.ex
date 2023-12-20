@@ -3,29 +3,30 @@ defmodule Day20 do
     Timer.time(fn ->
       data
       |> parse_input()
-      |> find_cycles()
+      |> find_cycles(1000)
       |> repeat_button_pushes(1000)
     end)
   end
 
-  def find_cycles(init_modules) do
+  def find_cycles(init_modules, max_cycles) do
     {modules, pulse_counter} = process_pulses(init_modules, [{"button", "broadcaster", :low}])
 
-    find_cycles(modules, [pulse_counter], init_modules)
+    find_cycles(modules, [pulse_counter], init_modules, max_cycles)
   end
 
-  def find_cycles(modules, pulse_counter_states, init_modules) when modules == init_modules do
+  def find_cycles(modules, pulse_counter_states, init_modules, _max_cycles)
+      when modules == init_modules do
     pulse_counter_states
   end
 
-
-  def find_cycles(modules, pulse_counter_states, init_modules) when length(pulse_counter_states) == 1000 do
+  def find_cycles(_modules, pulse_counter_states, _init_modules, max_cycles)
+      when length(pulse_counter_states) == max_cycles do
     pulse_counter_states
   end
 
-  def find_cycles(modules, pulse_counter_states, init_modules) do
+  def find_cycles(modules, pulse_counter_states, init_modules, max_cycles) do
     {modules, pulse_counter} = process_pulses(modules, [{"button", "broadcaster", :low}])
-    find_cycles(modules, pulse_counter_states ++ [pulse_counter], init_modules)
+    find_cycles(modules, pulse_counter_states ++ [pulse_counter], init_modules, max_cycles)
   end
 
   def repeat_button_pushes(pulse_counter_states, pushes) do
@@ -49,12 +50,13 @@ defmodule Day20 do
     {cycles * low, cycles * high}
   end
 
+  def process_pulses(modules, pulses, pulse_counter \\ %{})
   def process_pulses(modules, [], pulse_counter), do: {modules, pulse_counter}
 
   def process_pulses(
         modules,
         [{parent_module_name, module_name, pulse} | remaining_pulses],
-        pulse_counter \\ %{}
+        pulse_counter
       ) do
     pulse_counter = Map.update(pulse_counter, pulse, 1, &(&1 + 1))
 
@@ -63,7 +65,11 @@ defmodule Day20 do
         process_pulses(modules, remaining_pulses, pulse_counter)
 
       module ->
-        {module, new_pulses} = process_pulse(module_name, module, parent_module_name, pulse)
+        {module, new_pulse} = process_pulse(module, parent_module_name, pulse)
+        new_pulses = case new_pulse do
+          nil -> []
+          _ -> module |> get_destinations() |> Enum.map(&{module_name, &1, new_pulse})
+        end
 
         modules = Map.put(modules, module_name, module)
 
@@ -71,31 +77,35 @@ defmodule Day20 do
     end
   end
 
+  def get_destinations({:broadcaster, destinations}), do: destinations
+  def get_destinations({_type, _, destinations}), do: destinations
+
+
   # no change to module, pass pulse to destinations
-  def process_pulse(module_name, {:broadcaster, destinations} = module, _, pulse) do
-    {module, Enum.map(destinations, &{module_name, &1, pulse})}
+  def process_pulse({:broadcaster, _destinations} = module, _, pulse) do
+    {module, pulse}
   end
 
   # change modules input value for parent_module, pass pulse to destinations based on cached input values
-  def process_pulse(module_name, {:conjunction, inputs, destinations}, parent_module, pulse) do
+  def process_pulse({:conjunction, inputs, destinations}, parent_module, pulse) do
     new_inputs = Map.put(inputs, parent_module, pulse)
     new_module = {:conjunction, new_inputs, destinations}
     new_pulse = if Enum.all?(new_inputs, fn {_, p} -> p == :high end), do: :low, else: :high
-    {new_module, Enum.map(destinations, &{module_name, &1, new_pulse})}
+    {new_module, new_pulse}
   end
 
   # nothing happens for high pulse
-  def process_pulse(_module_name, {:flip_flop, _, _destinations} = module, _, :high) do
-    {module, []}
+  def process_pulse({:flip_flop, _, _destinations} = module, _, :high) do
+    {module, nil}
   end
 
   # flip module state and send pulses for low pulse
-  def process_pulse(module_name, {:flip_flop, :off, destinations}, _, :low) do
-    {{:flip_flop, :on, destinations}, Enum.map(destinations, &{module_name, &1, :high})}
+  def process_pulse({:flip_flop, :off, destinations}, _, :low) do
+    {{:flip_flop, :on, destinations}, :high}
   end
 
-  def process_pulse(module_name, {:flip_flop, :on, destinations}, _, :low) do
-    {{:flip_flop, :off, destinations}, Enum.map(destinations, &{module_name, &1, :low})}
+  def process_pulse({:flip_flop, :on, destinations}, _, :low) do
+    {{:flip_flop, :off, destinations}, :low}
   end
 
   # helpers
@@ -129,8 +139,8 @@ defmodule Day20 do
     inputs =
       modules
       |> Enum.filter(fn
-        {module_name, {_, _, module_destinations}} -> name in module_destinations
-        {module_name, {_, module_destinations}} -> name in module_destinations
+        {_module_name, {_, _, module_destinations}} -> name in module_destinations
+        {_module_name, {_, module_destinations}} -> name in module_destinations
       end)
       |> Enum.map(fn {module_name, _} -> {module_name, :low} end)
       |> Map.new()
