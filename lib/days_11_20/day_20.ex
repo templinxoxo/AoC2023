@@ -31,7 +31,9 @@ defmodule Day20 do
   end
 
   def find_cycles(modules, pulse_counter_states, init_modules, max_cycles) do
-    {modules, pulse_counter} = process_pulses(modules, [{"button", "broadcaster", :low}], length(pulse_counter_states))
+    {modules, pulse_counter} =
+      process_pulses(modules, [{"button", "broadcaster", :low}], length(pulse_counter_states))
+
     find_cycles(modules, pulse_counter_states ++ [pulse_counter], init_modules, max_cycles)
   end
 
@@ -57,7 +59,9 @@ defmodule Day20 do
   end
 
   def process_pulses(modules, pulses, pulse_counter \\ %{}, button_press_counter)
-  def process_pulses(modules, [], pulse_counter, _button_press_counter), do: {modules, pulse_counter}
+
+  def process_pulses(modules, [], pulse_counter, _button_press_counter),
+    do: {modules, pulse_counter}
 
   def process_pulses(
         modules,
@@ -74,20 +78,26 @@ defmodule Day20 do
       module ->
         {module, new_pulse} = process_pulse(module, parent_module_name, pulse)
         do_some_magic(module_name, new_pulse, button_press_counter)
-        new_pulses = case new_pulse do
-          nil -> []
-          _ -> module |> get_destinations() |> Enum.map(&{module_name, &1, new_pulse})
-        end
+
+        new_pulses =
+          case new_pulse do
+            nil -> []
+            _ -> module |> get_destinations() |> Enum.map(&{module_name, &1, new_pulse})
+          end
 
         modules = Map.put(modules, module_name, module)
 
-        process_pulses(modules, remaining_pulses ++ new_pulses, pulse_counter, button_press_counter)
+        process_pulses(
+          modules,
+          remaining_pulses ++ new_pulses,
+          pulse_counter,
+          button_press_counter
+        )
     end
   end
 
   def get_destinations({:broadcaster, destinations}), do: destinations
   def get_destinations({_type, _, destinations}), do: destinations
-
 
   # no change to module, pass pulse to destinations
   def process_pulse({:broadcaster, _destinations} = module, _, pulse) do
@@ -165,6 +175,8 @@ defmodule Day20 do
   #   in this case, print whenever those return high and manually search for cycle
   #   then with those cycles -> LCM will be the final result
   # I also don't see the point of implementing it since I already did that in day8
-  def do_some_magic(module, :high, cycle) when module in ["gc", "sz", "cm", "xf"], do: IO.puts("#{module}: #{cycle}")
+  def do_some_magic(module, :high, cycle) when module in ["gc", "sz", "cm", "xf"],
+    do: IO.puts("#{module}: #{cycle}")
+
   def do_some_magic(_, _, _), do: nil
 end
