@@ -17,7 +17,7 @@ defmodule Day21Test do
   ...........
   """
 
-  test "execute_part_1/1" do
+  test "execute_part_1/2" do
     result = Subject.execute_part_1(@test_data, 6)
 
     assert result == 16
