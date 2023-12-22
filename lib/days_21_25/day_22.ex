@@ -33,17 +33,15 @@ defmodule Day22 do
   end
 
   def play_jenga(bricks) do
-    bricks = get_top_and_bottom_bricks(bricks)
+    bricks = get_top_and_bottom_bricks(bricks) |> Enum.map(&{&1.id, &1}) |> Map.new()
 
     bricks
-    |> Enum.reject(fn %{top: top_bricks} = current_brick ->
+    |> Enum.reject(fn {_, %{top: top_bricks} = current_brick} ->
       top_bricks
       |> Enum.reject(fn brick_id ->
         # reject bricks that have other base
-        Enum.find(bricks, &(&1.id == brick_id))
-        |> Map.get(:bottom)
-        |> Enum.reject(&(&1 == current_brick.id))
-        |> Enum.any?()
+        %{bottom: bottom} = Map.get(bricks, brick_id)
+        length(bottom) > 1
       end)
       # if any bricks are left, that means they don't have other base
       # current brick will be rejected
