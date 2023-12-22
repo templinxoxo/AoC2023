@@ -22,4 +22,8 @@ defmodule Day21Test do
 
     assert result == 16
   end
+
+  test "execute_part_2/2" do
+    result = Subject.execute_part_2(@test_data, 1000) |> IO.inspect()
+  end
 end
