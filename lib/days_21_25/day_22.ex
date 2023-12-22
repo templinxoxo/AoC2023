@@ -7,6 +7,13 @@ defmodule Day22 do
     |> length()
   end
 
+  def execute_part_2(data \\ fetch_data()) do
+    data
+    |> parse_input()
+    |> do_tetris_fall()
+    |> play_fall_jenga()
+  end
+
   def do_tetris_fall(falling_bricks, fallen_bricks \\ [])
 
   def do_tetris_fall([], fallen_bricks) do
@@ -31,7 +38,8 @@ defmodule Day22 do
 
       brick_after_falling = Map.put(brick, :z, z..z_last)
       # after adding new brick to fallen stack, sort them descending by z end position
-      fallen_bricks = fallen_bricks |> Enum.concat([brick_after_falling]) |> Enum.sort_by(& &1.z.last, :desc)
+      fallen_bricks =
+        fallen_bricks |> Enum.concat([brick_after_falling]) |> Enum.sort_by(& &1.z.last, :desc)
 
       do_tetris_fall(falling_bricks, fallen_bricks)
     end)
@@ -52,6 +60,39 @@ defmodule Day22 do
       # current brick will be rejected
       |> Enum.any?()
     end)
+  end
+
+  def play_fall_jenga(bricks) do
+    bricks = get_top_and_bottom_bricks(bricks) |> Enum.map(&{&1.id, &1}) |> Map.new()
+
+    bricks
+    |> Enum.map(fn {i, current_brick} ->
+      bricks
+      |> get_bricks_to_fall([current_brick.id], Enum.map(current_brick.top, &Map.get(bricks, &1)))
+      |> Enum.reject(&(&1 == current_brick.id))
+      |> length
+    end)
+    |> Enum.sum()
+  end
+
+  def get_bricks_to_fall(_bricks, fallen_bricks, []) do
+    fallen_bricks
+  end
+
+  def get_bricks_to_fall(bricks, fallen_bricks, [top_brick | other_bricks]) do
+    if top_brick.bottom -- fallen_bricks == [] do
+      new_top_bricks = Enum.map(top_brick.top, &Map.get(bricks, &1))
+
+      top_bricks =
+        other_bricks
+        |> Enum.concat(new_top_bricks)
+        |> Enum.sort_by(& &1.z.first, :asc)
+        |> Enum.uniq()
+
+      get_bricks_to_fall(bricks, fallen_bricks ++ [top_brick.id], top_bricks)
+    else
+      get_bricks_to_fall(bricks, fallen_bricks, other_bricks)
+    end
   end
 
   def get_top_and_bottom_bricks(bricks) do

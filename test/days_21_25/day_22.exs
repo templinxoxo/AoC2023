@@ -78,4 +78,10 @@ defmodule Day22Test do
       assert result == 3
     end
   end
+
+  test "execute_part_1/1" do
+    result = Subject.execute_part_2(@test_data)
+
+    assert result == 7
+  end
 end
