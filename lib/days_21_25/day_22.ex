@@ -10,7 +10,8 @@ defmodule Day22 do
   def do_tetris_fall(falling_bricks, fallen_bricks \\ [])
 
   def do_tetris_fall([], fallen_bricks) do
-    Enum.reverse(fallen_bricks)
+    # once all bricks fall, order them by z position
+    Enum.sort_by(fallen_bricks, & &1.z.first, :asc)
   end
 
   def do_tetris_fall([brick | falling_bricks], fallen_bricks) do
@@ -28,7 +29,11 @@ defmodule Day22 do
     |> then(fn z ->
       z_last = Range.size(brick.z) + z - 1
 
-      do_tetris_fall(falling_bricks, [Map.put(brick, :z, z..z_last)] ++ fallen_bricks)
+      brick_after_falling = Map.put(brick, :z, z..z_last)
+      # after adding new brick to fallen stack, sort them descending by z end position
+      fallen_bricks = fallen_bricks |> Enum.concat([brick_after_falling]) |> Enum.sort_by(& &1.z.last, :desc)
+
+      do_tetris_fall(falling_bricks, fallen_bricks)
     end)
   end
 

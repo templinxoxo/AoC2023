@@ -32,7 +32,7 @@ defmodule Day21 do
     execute_part_2(fetch_data(), total_steps)
   end
 
-  def execute_part_2(data, total_steps) do
+  def execute_part_2(data, _total_steps) do
     data
     |> parse_input()
     |> then(fn {map, start} ->
@@ -43,8 +43,8 @@ defmodule Day21 do
       print(map)
       pattern_cycle = pattern_cycle_with_offset - pattern_offset
 
-      finished_cycles = ((total_steps - pattern_offset) / pattern_cycle)
-      remaining_steps = rem((total_steps - pattern_offset), pattern_cycle)
+      # finished_cycles = ((total_steps - pattern_offset) / pattern_cycle)
+      # remaining_steps = rem((total_steps - pattern_offset), pattern_cycle)
 
       {pattern_offset, pattern_cycle}
     end)
@@ -95,6 +95,7 @@ defmodule Day21 do
         Enum.reduce(new_coordinates, current_map, fn coordinates, map ->
           Map.update!(map, coordinates, &Map.merge(&1, %{visited: true, visited_at: steps - 2}))
         end)
+
       # uncomment for visualization
       # |> visualize()
 
