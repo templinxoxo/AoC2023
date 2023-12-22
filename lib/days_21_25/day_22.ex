@@ -33,23 +33,38 @@ defmodule Day22 do
   end
 
   def play_jenga(bricks) do
+    bricks = get_top_and_bottom_bricks(bricks)
+
     bricks
-    |> Enum.reject(fn %{z: z} = current_brick ->
-      bricks
-      # get all bricks that are 1 level higher then current brick
-      |> Enum.filter(&(&1.z.first == z.last + 1))
-      # filter out all overlapping
-      |> Enum.filter(&overlaps_with?(current_brick, &1))
-      # remove bricks that have other base than current brick
-      |> Enum.reject(fn top_brick ->
-        bricks
-        |> Enum.filter(&(&1.z.last == z.last))
-        |> Enum.reject(&(&1 == current_brick))
-        |> Enum.any?(&overlaps_with?(top_brick, &1))
+    |> Enum.reject(fn %{top: top_bricks} = current_brick ->
+      top_bricks
+      |> Enum.reject(fn brick_id ->
+        # reject bricks that have other base
+        Enum.find(bricks, &(&1.id == brick_id))
+        |> Map.get(:bottom)
+        |> Enum.reject(&(&1 == current_brick.id))
+        |> Enum.any?()
       end)
       # if any bricks are left, that means they don't have other base
       # current brick will be rejected
       |> Enum.any?()
+    end)
+  end
+
+  def get_top_and_bottom_bricks(bricks) do
+    bricks
+    |> Enum.map(fn %{z: first..last} = current_brick ->
+      top_bricks =
+        bricks
+        |> Enum.filter(&(&1.z.first == last + 1 and overlaps_with?(current_brick, &1)))
+        |> Enum.map(& &1.id)
+
+      bottom_bricks =
+        bricks
+        |> Enum.filter(&(&1.z.last == first - 1 and overlaps_with?(current_brick, &1)))
+        |> Enum.map(& &1.id)
+
+      Map.merge(current_brick, %{top: top_bricks, bottom: bottom_bricks})
     end)
   end
 
@@ -79,7 +94,8 @@ defmodule Day22 do
   def parse_input(input) do
     input
     |> String.split("\n", trim: true)
-    |> Enum.map(fn row ->
+    |> Enum.with_index()
+    |> Enum.map(fn {row, id} ->
       row
       |> String.split("~")
       |> Enum.map(&String.split(&1, ","))
@@ -89,6 +105,7 @@ defmodule Day22 do
       end)
       |> then(fn [x, y, z] ->
         %{
+          id: id,
           x: x,
           y: y,
           z: z
