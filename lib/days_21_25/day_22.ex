@@ -49,7 +49,7 @@ defmodule Day22 do
     bricks = get_top_and_bottom_bricks(bricks) |> Enum.map(&{&1.id, &1}) |> Map.new()
 
     bricks
-    |> Enum.reject(fn {_, %{top: top_bricks} = current_brick} ->
+    |> Enum.reject(fn {_, %{top: top_bricks}} ->
       top_bricks
       |> Enum.reject(fn brick_id ->
         # reject bricks that have other base
@@ -66,7 +66,7 @@ defmodule Day22 do
     bricks = get_top_and_bottom_bricks(bricks) |> Enum.map(&{&1.id, &1}) |> Map.new()
 
     bricks
-    |> Enum.map(fn {i, current_brick} ->
+    |> Enum.map(fn {_, current_brick} ->
       bricks
       |> get_bricks_to_fall([current_brick.id], Enum.map(current_brick.top, &Map.get(bricks, &1)))
       |> Enum.reject(&(&1 == current_brick.id))
