@@ -3,37 +3,51 @@ defmodule Day23 do
     data
     |> parse_input()
     |> then(fn {map, start} ->
-      bfs([[start]], map)
+      bfs([[start]], map, slope_clinb: false)
     end)
     |> Enum.map(&(length(&1) - 1))
     |> Enum.max()
   end
 
-  def bfs(paths, map, finished_paths \\ [])
+  def execute_part_2(data \\ fetch_data()) do
+    Timer.time(fn ->
+      data
+      |> parse_input()
+      |> then(fn {map, start} ->
+        bfs([[start]], map, slope_climb: true)
+      end)
+      |> Enum.map(&(length(&1) - 1))
+      |> Enum.max()
+    end)
+  end
 
-  def bfs([], _map, finished_paths) do
+  def bfs(paths, map, finished_paths \\ [], opts)
+
+  def bfs([], _map, finished_paths, _opts) do
     finished_paths
   end
 
-  def bfs([[%{type: :finish} | _] = path | remaining_paths], map, finished_paths) do
-    bfs(remaining_paths, map, [path | finished_paths])
+  def bfs([[%{type: :finish} | _] = path | remaining_paths], map, finished_paths, opts) do
+    bfs(remaining_paths, map, [path | finished_paths], opts)
   end
 
-  def bfs([[current_coordinates | _] = path | remaining_paths], map, finished_paths) do
+  def bfs([[current_coordinates | _] = path | remaining_paths], map, finished_paths, opts) do
     current_coordinates.coordinates
     # for each coordinate, get it's neighbors and move direction
     |> get_neighbors()
     |> Enum.map(fn {coordinates, direction} -> {Map.get(map, coordinates), direction} end)
     # remove unavailable paths
-    |> reject_unavailable(path)
+    |> reject_unavailable(path, opts)
     # add available new steps to paths
     |> Enum.map(fn {step, _} -> [step] ++ path end)
     |> then(&(remaining_paths ++ &1))
     # take the next steps
-    |> bfs(map, finished_paths)
+    |> bfs(map, finished_paths, opts)
   end
 
-  def reject_unavailable(neighbors, path) do
+  def reject_unavailable(neighbors, path, opts) do
+    slope_climb = Keyword.get(opts, :slope_climb, false)
+
     Enum.reject(neighbors, fn
       {nil, _direction} ->
         true
@@ -42,7 +56,10 @@ defmodule Day23 do
         true
 
       {%{type: :slope, direction: slope_direction}, direction} ->
-        is_opposite_direction?(direction, slope_direction)
+        is_opposite_direction?(direction, slope_direction) and !slope_climb
+
+      {%{type: :slope}, _direction} ->
+        false
 
       {%{type: :end}, _direction} ->
         true
