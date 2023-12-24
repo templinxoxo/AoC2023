@@ -3,18 +3,18 @@ defmodule Day23 do
     data
     |> parse_input()
     |> then(fn {map, start} ->
-      bfs([[start]], map, slope_clinb: false)
+      bfs([[start]], map, %{slope_climb: false})
     end)
     |> Enum.map(&(length(&1) - 1))
     |> Enum.max()
   end
 
-  def execute_part_2(data \\ fetch_data()) do
+  def brute_force_part_2(data \\ fetch_data()) do
     Timer.time(fn ->
       data
       |> parse_input()
       |> then(fn {map, start} ->
-        bfs([[start]], map, slope_climb: true)
+        bfs([[start]], map, %{slope_climb: true})
       end)
       |> Enum.map(&(length(&1) - 1))
       |> Enum.max()
@@ -27,8 +27,18 @@ defmodule Day23 do
     finished_paths
   end
 
+  def bfs(
+        [[%{type: :crossing} | _] = path | remaining_paths],
+        map,
+        finished_paths,
+        %{crossing_finish: true} = opts
+      )
+      when length(path) > 1 do
+    bfs(remaining_paths, map, [Enum.reverse(path) | finished_paths], opts)
+  end
+
   def bfs([[%{type: :finish} | _] = path | remaining_paths], map, finished_paths, opts) do
-    bfs(remaining_paths, map, [path | finished_paths], opts)
+    bfs(remaining_paths, map, [Enum.reverse(path) | finished_paths], opts)
   end
 
   def bfs([[current_coordinates | _] = path | remaining_paths], map, finished_paths, opts) do
@@ -46,7 +56,7 @@ defmodule Day23 do
   end
 
   def reject_unavailable(neighbors, path, opts) do
-    slope_climb = Keyword.get(opts, :slope_climb, false)
+    slope_climb = Map.get(opts, :slope_climb, false)
 
     Enum.reject(neighbors, fn
       {nil, _direction} ->
@@ -55,21 +65,25 @@ defmodule Day23 do
       {%{type: :forest}, _direction} ->
         true
 
-      {%{type: :slope, direction: slope_direction}, direction} ->
-        is_opposite_direction?(direction, slope_direction) and !slope_climb
+      {%{type: :slope, direction: slope_direction} = elem, direction} ->
+        (is_opposite_direction?(direction, slope_direction) and !slope_climb) or
+          elem_in_path?(path, elem)
 
-      {%{type: :slope}, _direction} ->
-        false
-
-      {%{type: :end}, _direction} ->
-        true
-
-      {%{type: :path, coordinates: coordinates}, _direction} ->
-        path |> Enum.map(& &1.coordinates) |> Enum.member?(coordinates)
+      {%{type: :path} = elem, _direction} ->
+        elem_in_path?(path, elem)
 
       {%{type: :finish}, _direction} ->
         false
+
+      {%{type: :crossing} = elem, _direction} ->
+        elem_in_path?(path, elem)
     end)
+  end
+
+  def elem_in_path?(path, elem) do
+    path
+    |> Enum.map(& &1.coordinates)
+    |> Enum.member?(elem.coordinates)
   end
 
   def is_opposite_direction?(">", "<"), do: true

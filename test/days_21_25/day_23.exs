@@ -35,8 +35,14 @@ defmodule Day23Test do
     assert result == 94
   end
 
+  test "brute_force_part_2/1" do
+    result = Subject.brute_force_part_2(@test_data)
+
+    assert result == 154
+  end
+
   test "execute_part_2/1" do
-    result = Subject.execute_part_2(@test_data)
+    result = Subject.Part2.execute(@test_data)
 
     assert result == 154
   end
